@@ -40,7 +40,9 @@ export var ApplicationsMixer = class {
         if (id in this._sliders) return;
 
         const stream = control.lookup_stream_id(id);
-        if (stream.is_event_stream || !(stream instanceof MixerSinkInput)) {
+
+        if (stream.is_event_stream || ((typeof stream === 'function') && 
+            !(stream instanceof MixerSinkInput))) {
             return;
         }
 
@@ -166,7 +168,7 @@ var ApplicationVolumeSlider = GObject.registerClass(class extends StreamSlider {
     _checkUsedSink() {
         let [, stdout, ,] = GLib.spawn_command_line_sync('pactl -f json list sink-inputs');
         if (stdout instanceof Uint8Array)
-            stdout = ByteArray.toString(stdout);
+            stdout = new TextDecoder().decode(stdout);
         stdout = JSON.parse(stdout);
 
         for (const sink_input of stdout) {
