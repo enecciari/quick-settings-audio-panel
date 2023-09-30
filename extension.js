@@ -34,7 +34,7 @@ const InputVolumeIndicator = QuickSettings._volumeInput;
 
 import { ApplicationsMixer } from './libs/widgets.js';
 import { LibPanel, Panel } from './libs/libpanel/main.js';
-
+import * as Config from 'resource:///org/gnome/shell/misc/config.js';
 
 export default class QuickExtension extends Extension{
     constructor(metadata) {
@@ -86,7 +86,7 @@ export default class QuickExtension extends Extension{
         const filters = this.settings.get_strv('filters');
 
         if (move_master_volume || media_control_action !== 'none' || create_mixer_sliders) {
-            LibPanel.enable();
+            LibPanel.enable(Config);
 
             this._panel = LibPanel.main_panel;
             let index = -1;
