@@ -1,3 +1,4 @@
 [submodule "libs/libpanel"]
 	path = libs/libpanel
-	url = git@github.com:Rayzeq/libpanel.git
+	url = git@github.com:enecciari/libpanel.git
+	branch = 45

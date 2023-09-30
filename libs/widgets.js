@@ -1,14 +1,20 @@
-const { GLib, GObject, Clutter, St } = imports.gi;
-const { MixerSinkInput } = imports.gi.Gvc;
-const ByteArray = imports.byteArray;
 
-const PopupMenu = imports.ui.popupMenu; // https://gitlab.gnome.org/GNOME/gnome-shell/-/blob/main/js/ui/popupMenu.js
-const Volume = imports.ui.status.volume; // https://gitlab.gnome.org/GNOME/gnome-shell/-/blob/main/js/ui/status/volume.js
+import St from 'gi://St';
+import GLib from 'gi://GLib';
+import GObject from 'gi://GObject';
+import Clutter from 'gi://Clutter';
+import MixerSinkInput from 'gi://Gvc/MixerSinkInput';
 
-const OutputStreamSlider = imports.ui.main.panel.statusArea.quickSettings._volume._output.constructor;
+// https://gitlab.gnome.org/GNOME/gnome-shell/-/blob/main/js/ui/popupMenu.js
+import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
+// https://gitlab.gnome.org/GNOME/gnome-shell/-/blob/main/js/ui/status/volume.js
+import * as Volume  from 'resource:///org/gnome/shell/ui/status/volume.js';
+import * as Main  from 'resource:///org/gnome/shell/ui/main.js';
+
+const OutputStreamSlider = Main.panel.statusArea.quickSettings._volumeOutput._output.constructor;
 const StreamSlider = Object.getPrototypeOf(OutputStreamSlider);
 
-var ApplicationsMixer = class {
+export var ApplicationsMixer = class {
     constructor(panel, index, filter_mode, filters) {
         this.panel = panel;
 

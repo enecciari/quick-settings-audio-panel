@@ -16,16 +16,10 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 
-const { Clutter } = imports.gi;
-const ExtensionUtils = imports.misc.extensionUtils;
-const Gettext = imports.gettext;
-
-const Self = ExtensionUtils.getCurrentExtension();
-const Domain = Gettext.domain(Self.metadata.uuid);
-const _ = Domain.gettext;
-
-const Main = imports.ui.main;
-const { MediaSection } = imports.ui.mpris;
+import Clutter from 'gi://Clutter';
+import {Extension, gettext as _} from 'resource:///org/gnome/shell/extensions/extension.js';
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import {MediaSection} from 'resource:///org/gnome/shell/ui/mpris.js';
 
 const DateMenu = Main.panel.statusArea.dateMenu;
 const QuickSettings = Main.panel.statusArea.quickSettings;
@@ -34,16 +28,18 @@ const CalendarMessageList = DateMenu._messageList;
 const MediaSection_DateMenu = CalendarMessageList._mediaSection;
 
 const SystemItem = QuickSettings._system._systemItem;
-const OutputVolumeSlider = QuickSettings._volume._output;
-const InputVolumeSlider = QuickSettings._volume._input;
-const InputVolumeIndicator = QuickSettings._volume._inputIndicator;
+const OutputVolumeSlider = QuickSettings._volumeOutput._output;
+const InputVolumeSlider = QuickSettings._volumeInput._input;
+const InputVolumeIndicator = QuickSettings._volumeInput;
 
-const { ApplicationsMixer } = Self.imports.libs.widgets;
-const { LibPanel, Panel } = Self.imports.libs.libpanel.main;
+import { ApplicationsMixer } from './libs/widgets.js';
+import { LibPanel, Panel } from './libs/libpanel/main.js';
 
 
-class Extension {
-    constructor() {
+export default class QuickExtension extends Extension{
+    constructor(metadata) {
+        super(metadata);
+        this.initTranslations();
         this._ivssa_callback = null;
         this._ivssr_callback = null;
 
@@ -54,7 +50,7 @@ class Extension {
     }
 
     enable() {
-        this.settings = ExtensionUtils.getSettings();
+        this.settings = this.getSettings();
 
         this._scasis_callback = this.settings.connect(
             'changed::always-show-input-slider',
@@ -215,10 +211,4 @@ class Extension {
             InputVolumeIndicator.visible = InputVolumeSlider._shouldBeVisible();
         }
     }
-}
-
-function init() {
-    ExtensionUtils.initTranslations(Self.metadata.uuid);
-
-    return new Extension();
 }
