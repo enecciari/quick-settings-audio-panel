@@ -11,7 +11,7 @@ import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 import * as Volume  from 'resource:///org/gnome/shell/ui/status/volume.js';
 import * as Main  from 'resource:///org/gnome/shell/ui/main.js';
 
-const OutputStreamSlider = Main.panel.statusArea.quickSettings._volumeOutput._output.constructor;
+const OutputStreamSlider = new Volume.OutputIndicator()._output.constructor;
 const StreamSlider = Object.getPrototypeOf(OutputStreamSlider);
 
 export var ApplicationsMixer = class {

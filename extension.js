@@ -17,9 +17,11 @@
  */
 
 import Clutter from 'gi://Clutter';
-import {Extension, gettext as _} from 'resource:///org/gnome/shell/extensions/extension.js';
+import {Extension, gettext as _, InjectionManager} from 'resource:///org/gnome/shell/extensions/extension.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import {MediaSection} from 'resource:///org/gnome/shell/ui/mpris.js';
+import {QuickSettingsMenu} from 'resource:///org/gnome/shell/ui/quickSettings.js';
+
 
 const DateMenu = Main.panel.statusArea.dateMenu;
 const QuickSettings = Main.panel.statusArea.quickSettings;
@@ -27,16 +29,12 @@ const QuickSettings = Main.panel.statusArea.quickSettings;
 const CalendarMessageList = DateMenu._messageList;
 const MediaSection_DateMenu = CalendarMessageList._mediaSection;
 
-const SystemItem = QuickSettings._system._systemItem;
-const OutputVolumeSlider = QuickSettings._volumeOutput._output;
-const InputVolumeSlider = QuickSettings._volumeInput._input;
-const InputVolumeIndicator = QuickSettings._volumeInput;
 
 import { ApplicationsMixer } from './libs/widgets.js';
 import { LibPanel, Panel } from './libs/libpanel/main.js';
 import * as Config from 'resource:///org/gnome/shell/misc/config.js';
 
-export default class QuickExtension extends Extension{
+export default class QuickExtension extends Extension {
     constructor(metadata) {
         super(metadata);
         this.initTranslations();
@@ -47,6 +45,7 @@ export default class QuickExtension extends Extension{
         this._master_volumes = [];
         this._media_section = null;
         this._applications_mixer = null;
+        this._injectionManager = new InjectionManager();
     }
 
     enable() {
@@ -56,10 +55,17 @@ export default class QuickExtension extends Extension{
             'changed::always-show-input-slider',
             () => this._set_always_show_input(this.settings.get_boolean('always-show-input-slider'))
         );
-        this.settings.emit('changed::always-show-input-slider', 'always-show-input-slider');
 
         this._sc_callback = this.settings.connect('changed', () => this._refresh_panel());
-        this._refresh_panel();
+        this._injectionManager.overrideMethod(QuickSettingsMenu.prototype, 'open',
+            originalMethod => {
+                return arg => {                
+                    this._refresh_panel();
+                    this.settings.emit('changed::always-show-input-slider', 'always-show-input-slider');
+                    originalMethod.call(Main.panel, arg);
+                };
+            });
+        //this._refresh_panel();
     }
 
     disable() {
@@ -70,11 +76,15 @@ export default class QuickExtension extends Extension{
         this._cleanup_panel();
 
         this.settings = null;
+        this._injectionManager.clear();
     }
 
     _refresh_panel() {
         this._cleanup_panel();
 
+        this.OutputVolumeSlider = QuickSettings._volumeOutput._output;
+        this.InputVolumeSlider = QuickSettings._volumeInput._input;
+        this.InputVolumeIndicator = QuickSettings._volumeInput;
         const move_master_volume = this.settings.get_boolean('move-master-volume');
         const media_control_action = this.settings.get_string('media-control');
         const create_mixer_sliders = this.settings.get_boolean('create-mixer-sliders');
@@ -105,14 +115,15 @@ export default class QuickExtension extends Extension{
             }
             if (merge_panel && panel_position === 'top') {
                 widgets_ordering.reverse();
+                const SystemItem = QuickSettings._system._systemItem;
                 index = this._panel.getItems().indexOf(SystemItem) + 2;
             }
 
             for (const widget of widgets_ordering) {
                 if (widget === 'volume-output' && move_master_volume) {
-                    this._move_slider(index, OutputVolumeSlider);
+                    this._move_slider(index, this.OutputVolumeSlider);
                 } else if (widget === 'volume-input' && move_master_volume) {
-                    this._move_slider(index, InputVolumeSlider);
+                    this._move_slider(index, this.InputVolumeSlider);
                 } else if (widget === 'media' && media_control_action === 'move') {
                     this._move_media_controls(index);
                 } else if (widget === 'media' && media_control_action === 'duplicate') {
@@ -192,23 +203,23 @@ export default class QuickExtension extends Extension{
 
     _set_always_show_input(enabled) {
         if (enabled) {
-            this._ivssa_callback = InputVolumeSlider._control.connect('stream-added', () => {
-                InputVolumeSlider.visible = true;
-                InputVolumeIndicator.visible = InputVolumeSlider._shouldBeVisible();
+            this._ivssa_callback = this.InputVolumeSlider._control.connect('stream-added', () => {
+                this.InputVolumeSlider.visible = true;
+                this.InputVolumeIndicator.visible = InputVolumeSlider._shouldBeVisible();
             });
-            this._ivssr_callback = InputVolumeSlider._control.connect('stream-removed', () => {
-                InputVolumeSlider.visible = true;
-                InputVolumeIndicator.visible = InputVolumeSlider._shouldBeVisible();
+            this._ivssr_callback = this.InputVolumeSlider._control.connect('stream-removed', () => {
+                this.InputVolumeSlider.visible = true;
+                this.InputVolumeIndicator.visible = InputVolumeSlider._shouldBeVisible();
             });
-            InputVolumeSlider.visible = true;
-            InputVolumeIndicator.visible = InputVolumeSlider._shouldBeVisible();
+            this.InputVolumeSlider.visible = true;
+            this.InputVolumeIndicator.visible = this.InputVolumeSlider._shouldBeVisible();
         } else {
             if (this._ivssr_callback) InputVolumeSlider._control.disconnect(this._ivssr_callback);
             if (this._ivssa_callback) InputVolumeSlider._control.disconnect(this._ivssa_callback);
             this._ivssr_callback = null;
             this._ivssa_callback = null;
-            InputVolumeSlider.visible = InputVolumeSlider._shouldBeVisible();
-            InputVolumeIndicator.visible = InputVolumeSlider._shouldBeVisible();
+            this.InputVolumeSlider.visible = this.InputVolumeSlider._shouldBeVisible();
+            this.InputVolumeIndicator.visible = this.InputVolumeSlider._shouldBeVisible();
         }
     }
 }
