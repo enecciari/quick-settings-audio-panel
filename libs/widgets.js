@@ -41,8 +41,7 @@ export var ApplicationsMixer = class {
 
         const stream = control.lookup_stream_id(id);
 
-        if (stream.is_event_stream || ((typeof stream === 'function') && 
-            !(stream instanceof MixerSinkInput))) {
+        if (stream.is_event_stream || !(stream instanceof MixerSinkInput)) {
             return;
         }
 
